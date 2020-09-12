@@ -16,13 +16,21 @@
                     }"
           ></div>
         </div>
-        <el-avatar
-          class="human"
-          icon="el-icon-user-solid"
-          v-for="(vertex,index) in vertexesDisp"
-          :key="index"
-          v-bind:style="{left:vertex.left,top:vertex.top}"
-        ></el-avatar>
+        <el-tooltip v-for="(vertex,index) in vertexesDisp" :key="index" placement="top">
+          <div slot="content">
+            姓名: {{ index }}
+            <br />
+            所在地: {{ vertex.di }}
+            <br />
+            单位: {{ vertex.wo }}
+            <br />
+          </div>
+          <el-avatar
+            class="human"
+            icon="el-icon-user-solid"
+            v-bind:style="{left:vertex.left,top:vertex.top}"
+          ></el-avatar>
+        </el-tooltip>
       </el-main>
     </el-container>
   </div>
@@ -35,7 +43,7 @@ export default {
     graph: Object,
   },
   computed: {
-    vertexesInnerDisp: function () {
+    vertexesDisp: function () {
       const activeVertexColor = "aliceblue";
       const normalVertexColor = "#b1c1d1";
       const lockVertexColor = "#66b1ff";
@@ -44,23 +52,21 @@ export default {
       //console.log(this.vertexes.length);
       for (let i = 0; i < this.vertexes.length; i++) {
         let element = this.vertexes[i];
-        vertexesDisp.push({
-          index: i,
-          left: "50%",
-          transform: "rotate("+30*index+")",
+        let t = {
+          left: element.x + "px",
+          top: element.y + "px",
           color: element.isActive
             ? activeVertexColor
             : element.isLocked
             ? lockVertexColor
             : normalVertexColor,
-        });
+        };
+        for (let key in element) {
+          t[key] = element[key];
+        }
+        vertexesDisp.push(t);
       }
       return vertexesDisp;
-    },
-    vertexesOuterDisp: function () {
-      const activeVertexColor = "aliceblue";
-      const normalVertexColor = "#b1c1d1";
-      const lockVertexColor = "#66b1ff";
     },
     edgesDisp: function () {
       let edgesDisp = [];
@@ -129,17 +135,24 @@ export default {
 </script>
 
 <style scoped>
+.relation {
+  background: #768b9c;
+  width: 100%;
+  height: 100%;
+}
+
 .human {
   position: absolute;
-  background: antiquewhite;
-  color: blueviolet;
+  background: #768b9c;
+  border: 2px floralwhite solid;
+  color: floralwhite;
   transform: translateX(-50%) translateY(-50%);
 }
 
 .edge {
   position: absolute;
   transform-origin: top left;
-  border-top: 2px solid;
+  border-top: 3px solid;
   transition: color 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 </style>
