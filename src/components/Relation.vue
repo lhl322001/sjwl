@@ -16,22 +16,49 @@
                     }"
           ></div>
         </div>
-        <el-tooltip v-for="(vertex,index) in vertexesDisp" :key="index" placement="top">
+        <el-tooltip
+          v-for="(vertex,index) in vertexesDisp"
+          :key="index"
+          placement="top"
+          style="cursor:pointer"
+        >
           <div slot="content">
-            姓名: {{ index }}
+            姓名：{{vertex.xm}}
             <br />
-            所在地: {{ vertex.di }}
-            <br />
-            单位: {{ vertex.wo }}
-            <br />
+            单位：{{vertex.wo}}
           </div>
-          <el-avatar
+          <el-button
             class="human"
             icon="el-icon-user-solid"
-            v-bind:style="{left:vertex.left,top:vertex.top}"
-          ></el-avatar>
+            circle
+            v-bind:style="{left:vertex.left,top:vertex.top,color:vertex.color,borderColor:vertex.color}"
+            @click="setCurHuman(index)"
+          ></el-button>
         </el-tooltip>
       </el-main>
+      <el-aside style="width: 500px">
+        <div id="information" v-if="curHumanIndex!=null">
+          姓名:{{ curHuman.xm }}
+          <br />
+          户籍:{{ curHuman.hj }}
+          <br />
+          所在地:{{ curHuman.di }}
+          <br />
+          单位:{{ curHuman.wo }}
+          <br />
+          大学:{{ curHuman.sc }}
+          <br />
+          中学:{{ curHuman.scc }}
+          <br />
+          小学:{{ curHuman.sca }}
+          <br />
+          兴趣:{{ curHuman.xq }}
+          <br />
+          所在群组:{{ curHuman.qun }}
+          <br />
+          <el-button type="primary" plain>可能认识的人</el-button>
+        </div>
+      </el-aside>
     </el-container>
   </div>
 </template>
@@ -43,10 +70,56 @@ export default {
     graph: Object,
   },
   computed: {
+    curHuman: function () {
+      if (this.curHumanIndex == null) {
+        return {};
+      }
+      let curHuman = this.vertexes[this.curHumanIndex];
+      curHuman.xq = (curHuman.xq + "")
+        .replace('"', " ")
+        .replace("[", " ")
+        .replace("]", "");
+      curHuman.qun = (curHuman.qun + "")
+        .replace('"', " ")
+        .replace("[", " ")
+        .replace("]", "");
+      return curHuman;
+    },
+    relatedHuman: function () {
+      if (this.curHumanIndex == null) {
+        return [];
+      }
+      let relation = new Array(this.vertexes.length);
+
+      for (let i = 0; i < relation.length; i++) {
+        relation[i] = {
+          book: true,
+          commonFriend: 0,
+        };
+      }
+
+      for (
+        let i = 0;
+        i < this.graph.adjacencyList[this.curHumanIndex].length;
+        i++
+      ) {
+        let e = this.this.graph.adjacencyList[this.curHumanIndex][i];
+        relation[e.from].book = false;
+        relation[e.to].book = false;
+
+        let friend = e.from == this.curHumanIndex ? e.to : e.from;
+        for (let j = 0; j < this.graph.adjacencyList[friend].length; j++) {
+          relation[e.from].commonFriend++;
+          relation[e.to].commonFriend++;
+        }
+        // 未完待续
+      }
+      return [];
+    },
     vertexesDisp: function () {
-      const activeVertexColor = "aliceblue";
-      const normalVertexColor = "#b1c1d1";
-      const lockVertexColor = "#66b1ff";
+      const activeVertexColor = "yellow";
+      const normalVertexColor = "floralwhite";
+      const lockVertexColor = "#fffaf030";
 
       let vertexesDisp = [];
       //console.log(this.vertexes.length);
@@ -79,8 +152,8 @@ export default {
         );
         let angle = Math.atan2(v.y - u.y, v.x - u.x);
         const selectedEdgeColor = "#000";
-        const activeEdgeColor = "blue";
-        const normalEdgeColor = "darkgray";
+        const activeEdgeColor = "floralwhite";
+        const normalEdgeColor = "#fffaf060";
         edgesDisp.push({
           width: dist + "px",
           transform: "rotate(" + angle + "rad)",
@@ -123,12 +196,31 @@ export default {
           isSelected: false,
         });
       });
+      this.curHumanIndex = null;
+    },
+    setCurHuman(index) {
+      this.reset();
+      this.curHumanIndex = index;
+      let curAdj = this.graph.adjacencyList[index];
+      this.vertexes[index].isActive = true;
+      let visited = new Array(this.graph.vertexes.length);
+      for (let i = 0; i < curAdj.length; i++) {
+        this.edges[curAdj[i].index].isActive = true;
+        visited[this.edges[curAdj[i].index].to] = true;
+        visited[this.edges[curAdj[i].index].from] = true;
+      }
+      for (let i = 0; i < this.graph.vertexes.length; i++) {
+        if (i !== index && !visited[i]) {
+          this.vertexes[i].isLocked = true;
+        }
+      }
     },
   },
   data: function () {
     return {
       vertexes: [],
       edges: [],
+      curHumanIndex: null,
     };
   },
 };
@@ -136,6 +228,14 @@ export default {
 
 <style scoped>
 .relation {
+  height: 100%;
+}
+
+.el-container {
+  height: 100%;
+}
+
+.el-main {
   background: #768b9c;
   width: 100%;
   height: 100%;
@@ -154,5 +254,12 @@ export default {
   transform-origin: top left;
   border-top: 3px solid;
   transition: color 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#information {
+  position: relative;
+  margin-top: 20%;
+  margin-left: 20%;
+  margin-right: 20%;
 }
 </style>
