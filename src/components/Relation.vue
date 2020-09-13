@@ -37,43 +37,74 @@
         </el-tooltip>
       </el-main>
       <el-aside style="width: 500px">
-        <div id="information" v-if="curHumanIndex!=null">
-          <el-collapse v-model="activeName" accordion>
-          <el-collapse-item title="姓名 Name" name="1">
+        <div id="information" v-if="curHumanIndex!=null && !displayRelation">
+          <el-collapse accordion>
+            <el-collapse-item title="姓名 Name" name="1">
+              <div>
+                <font face="微软雅黑">{{ curHuman.xm }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="户籍 Domicile" name="2">
+              <div>
+                <font face="微软雅黑">{{ curHuman.hj }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="所在地 Area" name="3">
+              <div>
+                <font face="微软雅黑">{{ curHuman.di }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="单位 Unit" name="4">
+              <div>
+                <font face="微软雅黑">{{ curHuman.wo }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="大学 University" name="5">
+              <div>
+                <font face="微软雅黑">{{ curHuman.sc }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="中学 High school," name="6">
+              <div>
+                <font face="微软雅黑">{{ curHuman.scc }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="小学 Primary school" name="7">
+              <div>
+                <font face="微软雅黑">{{ curHuman.sca }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="兴趣 Interest" name="8">
+              <div>
+                <font face="微软雅黑">{{ curHuman.xq }}</font>
+              </div>
+            </el-collapse-item>
+            <el-collapse-item title="所在群组 Group" name="9">
+              <div>
+                <font face="微软雅黑">{{ curHuman.qun }}</font>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
+          <br />
+          <br />
+          <br />
+          <br />
+          <el-button type="primary" plain @click="showRelatedHuman">可能认识的人</el-button>
+        </div>
+        <div v-if="displayRelation">
+          <div class="related-human" v-for="(human,key) in relatedHuman" :key="key">
+            <!-- 样例 -->
             <div>
-              <font face="微软雅黑">{{ curHuman.xm }}</font> 
+              {{ human.name }}
+              <br />
             </div>
-          </el-collapse-item>
-          <el-collapse-item title="户籍 Domicile" name="2">
-            <div><font face="微软雅黑">{{ curHuman.hj }}</font> </div>
-          </el-collapse-item>
-          <el-collapse-item title="所在地 Area" name="3">
-            <div><font face="微软雅黑">{{ curHuman.di }}</font> </div>
-          </el-collapse-item>
-          <el-collapse-item title="单位 Unit" name="4">
-            <div><font face="微软雅黑">{{ curHuman.wo }}</font> </div>
-          </el-collapse-item>
-          <el-collapse-item title="大学 University" name="5">
-            <div><font face="微软雅黑">{{ curHuman.sc }}</font> </div>
-          </el-collapse-item>
-          <el-collapse-item title="中学 High school," name="6">
-            <div><font face="微软雅黑">{{ curHuman.scc }}</font> </div>
-          </el-collapse-item>
-          <el-collapse-item title="小学 Primary school" name="7">
-            <div><font face="微软雅黑">{{ curHuman.sca }}</font> </div>
-          </el-collapse-item>
-          <el-collapse-item title="兴趣 Interest" name="8">
-            <div><font face="微软雅黑">{{ curHuman.xq }}</font> </div>
-          </el-collapse-item>
-          <el-collapse-item title="所在群组 Group" name="9">
-            <div><font face="微软雅黑">{{ curHuman.qun }}</font> </div>
-          </el-collapse-item>
-        </el-collapse>
-          <br>
-          <br>
-          <br>
-          <br>
-          <el-button type="primary" plain>可能认识的人</el-button>
+            <div v-if="human.commonFriend.length">{{ human.commonFriend.length +"个共同好友"}}</div>
+            <div v-if="human.sameGroup.length">
+              {{ human.sameGroup.length + "个共同群："}}
+              <div v-for="(group,index) in human.sameGroup" :key="index">{{group}}</div>
+            </div>
+            <div v-if="human.sameCompany">相同的工作单位</div>
+          </div>
         </div>
       </el-aside>
     </el-container>
@@ -102,7 +133,7 @@ export default {
         .replace("]", "");
       return curHuman;
     },
-    relatedHuman: function () {
+    relation: function () {
       if (this.curHumanIndex == null) {
         return [];
       }
@@ -111,32 +142,100 @@ export default {
       for (let i = 0; i < relation.length; i++) {
         relation[i] = {
           book: true,
-          commonFriend: 0,
+          commonFriend: [],
+          sameCompany: false,
+          sameUniv: false,
+          sameMiddleSchool: false,
+          samePrimarySchool: false,
+          sameCity: false,
+          sameHometown: false,
+          sameHobby: [],
+          sameGroup: [],
         };
       }
 
-      for (
-        let i = 0;
-        i < this.graph.adjacencyList[this.curHumanIndex].length;
-        i++
-      ) {
-        let e = this.this.graph.adjacencyList[this.curHumanIndex][i];
+      let x = this.curHumanIndex;
+
+      this.graph.adjacencyList[x].forEach((e) => {
         relation[e.from].book = false;
         relation[e.to].book = false;
 
-        let friend = e.from == this.curHumanIndex ? e.to : e.from;
-        for (let j = 0; j < this.graph.adjacencyList[friend].length; j++) {
-          relation[e.from].commonFriend++;
-          relation[e.to].commonFriend++;
+        let friend = e.from == x ? e.to : e.from;
+        this.graph.adjacencyList[friend].forEach((edge) => {
+          relation[edge.from].commonFriend.push(this.graph.vertexes[friend].xm);
+          relation[edge.to].commonFriend.push(this.graph.vertexes[friend].xm);
+        });
+      });
+
+      let u = this.graph.vertexes[x];
+
+      this.graph.vertexes.forEach((element, index) => {
+        if (!relation[index].book) {
+          return;
         }
-        // 未完待续
+        if (element.wo === u.wo) {
+          relation[index].sameCompany = true;
+        }
+
+        if (element.sc === u.sc) {
+          relation[index].sameUniv = true;
+        }
+
+        if (element.scc === u.scc) {
+          relation[index].sameMiddleSchool = true;
+        }
+
+        if (element.sca === u.sca) {
+          relation[index].samePrimarySchool = true;
+        }
+
+        if (element.hj === u.hj) {
+          relation[index].sameHometown = true;
+        }
+
+        if (element.di === u.di) {
+          relation[index].sameCity = true;
+        }
+
+        element.xq.forEach((hobby) => {
+          if (u.xq.indexOf(hobby) !== -1) {
+            relation[index].sameHobby.push(hobby);
+          }
+        });
+
+        element.qun.forEach((group) => {
+          if (u.qun.indexOf(group) !== -1) {
+            relation[index].sameGroup.push(group);
+          }
+        });
+      });
+
+      return relation;
+    },
+    relatedHuman: function () {
+      let res = [];
+      this.relation.forEach((element, index) => {
+        if (element.book) {
+          let tmp = Object.assign({}, this.relation[index]);
+          tmp.index = index;
+          tmp.name = this.graph.vertexes[index].xm;
+          tmp.score = this.calRelation(element);
+          res.push(tmp);
+        }
+      });
+      res.sort(function (a, b) {
+        return b.score - a.score;
+      });
+      if (res.length > 5) {
+        res = res.slice(0, 5);
       }
-      return [];
+      return res;
     },
     vertexesDisp: function () {
       const activeVertexColor = "#0000CD";
       const normalVertexColor = "floralwhite";
       const lockVertexColor = "#fffaf030";
+      const dispVertexColor = "gold";
 
       let vertexesDisp = [];
       //console.log(this.vertexes.length);
@@ -147,6 +246,8 @@ export default {
           top: element.y + "px",
           color: element.isActive
             ? activeVertexColor
+            : element.isDisp
+            ? dispVertexColor
             : element.isLocked
             ? lockVertexColor
             : normalVertexColor,
@@ -197,6 +298,7 @@ export default {
         let t = {
           isActive: false,
           isLocked: false,
+          isDisp: false,
         };
         for (let key in element) {
           t[key] = element[key];
@@ -214,6 +316,7 @@ export default {
         });
       });
       this.curHumanIndex = null;
+      this.displayRelation = false;
     },
     setCurHuman(index) {
       this.reset();
@@ -232,12 +335,33 @@ export default {
         }
       }
     },
+    calRelation(relation) {
+      let res = 0;
+      res += relation.commonFriend.length * 100;
+      res += relation.sameGroup.length * 40;
+      res += relation.sameHobby.length * 15;
+      res += relation.sameCompany ? 20 : 0;
+      res += relation.sameUniv ? 15 : 0;
+      res += relation.sameMiddleSchool ? 12 : 0;
+      res += relation.samePrimarySchool ? 10 : 0;
+      res += relation.sameCity ? 5 : 0;
+      res += relation.sameHometown ? 3 : 0;
+      return res;
+    },
+    showRelatedHuman() {
+      this.displayRelation = true;
+      this.relatedHuman.forEach((element) => {
+        console.log(element.index, this.vertexes[element.index]);
+        this.vertexes[element.index].isDisp = true;
+      });
+    },
   },
   data: function () {
     return {
       vertexes: [],
       edges: [],
       curHumanIndex: null,
+      displayRelation: false,
     };
   },
 };
@@ -278,5 +402,9 @@ export default {
   margin-top: 20%;
   margin-left: 20%;
   margin-right: 20%;
+}
+
+.related-human {
+  border: 2px aliceblue solid;
 }
 </style>
