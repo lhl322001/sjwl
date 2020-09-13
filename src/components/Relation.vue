@@ -38,24 +38,41 @@
       </el-main>
       <el-aside style="width: 500px">
         <div id="information" v-if="curHumanIndex!=null">
-          姓名:{{ curHuman.xm }}
-          <br />
-          户籍:{{ curHuman.hj }}
-          <br />
-          所在地:{{ curHuman.di }}
-          <br />
-          单位:{{ curHuman.wo }}
-          <br />
-          大学:{{ curHuman.sc }}
-          <br />
-          中学:{{ curHuman.scc }}
-          <br />
-          小学:{{ curHuman.sca }}
-          <br />
-          兴趣:{{ curHuman.xq }}
-          <br />
-          所在群组:{{ curHuman.qun }}
-          <br />
+          <el-collapse v-model="activeName" accordion>
+          <el-collapse-item title="姓名 Name" name="1">
+            <div>
+              <font face="微软雅黑">{{ curHuman.xm }}</font> 
+            </div>
+          </el-collapse-item>
+          <el-collapse-item title="户籍 Domicile" name="2">
+            <div><font face="微软雅黑">{{ curHuman.hj }}</font> </div>
+          </el-collapse-item>
+          <el-collapse-item title="所在地 Area" name="3">
+            <div><font face="微软雅黑">{{ curHuman.di }}</font> </div>
+          </el-collapse-item>
+          <el-collapse-item title="单位 Unit" name="4">
+            <div><font face="微软雅黑">{{ curHuman.wo }}</font> </div>
+          </el-collapse-item>
+          <el-collapse-item title="大学 University" name="5">
+            <div><font face="微软雅黑">{{ curHuman.sc }}</font> </div>
+          </el-collapse-item>
+          <el-collapse-item title="中学 High school," name="6">
+            <div><font face="微软雅黑">{{ curHuman.scc }}</font> </div>
+          </el-collapse-item>
+          <el-collapse-item title="小学 Primary school" name="7">
+            <div><font face="微软雅黑">{{ curHuman.sca }}</font> </div>
+          </el-collapse-item>
+          <el-collapse-item title="兴趣 Interest" name="8">
+            <div><font face="微软雅黑">{{ curHuman.xq }}</font> </div>
+          </el-collapse-item>
+          <el-collapse-item title="所在群组 Group" name="9">
+            <div><font face="微软雅黑">{{ curHuman.qun }}</font> </div>
+          </el-collapse-item>
+        </el-collapse>
+          <br>
+          <br>
+          <br>
+          <br>
           <el-button type="primary" plain>可能认识的人</el-button>
         </div>
       </el-aside>
@@ -80,7 +97,7 @@ export default {
         .replace("[", " ")
         .replace("]", "");
       curHuman.qun = (curHuman.qun + "")
-        .replace('"', " ")
+        .replace('"', "  ")
         .replace("[", " ")
         .replace("]", "");
       return curHuman;
@@ -117,7 +134,7 @@ export default {
       return [];
     },
     vertexesDisp: function () {
-      const activeVertexColor = "yellow";
+      const activeVertexColor = "#0000CD";
       const normalVertexColor = "floralwhite";
       const lockVertexColor = "#fffaf030";
 
